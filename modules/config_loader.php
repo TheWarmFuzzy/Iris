@@ -30,7 +30,7 @@
 		//Parse the file
 		$data = json_decode($json, true);
 		
-		//Return the results
+		//Return the results (associative array)
 		return $data;
 	}
 
