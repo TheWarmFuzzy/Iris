@@ -6,8 +6,7 @@
 </head>
 
 <body>
-	You got an error, stop fucking shit up!
-	<?php echo $error["message"]; ?>
+	<?php ?>
 </body>
 
 </html>
