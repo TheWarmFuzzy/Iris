@@ -11,6 +11,8 @@
 	defined('TEST_CONSTANT') or define('TEST_CONSTANT', "My Value");
 	
 	echo TEST_CONSTANT;
+	
+	
 	include("pages/error.php");
 	exit();
 ?>
