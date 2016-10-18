@@ -2,9 +2,6 @@
 
 	function load($filename){
 		
-		//Add json extension
-		$filename .= ".json";
-		
 		//Check if the input exists
 		if(!isset($filename))
 			return null;
@@ -16,6 +13,12 @@
 		//Check if the filename is empty
 		if(empty($filename))
 			return null;
+		
+		//Escape characters just to be safe 
+		$filename = addslashes($filename);
+		
+		//Convert namespace to a file path
+		$filename = "configs/" . $filename . ".json";
 		
 		//Checks if the file exists
 		if(!file_exists($filename))
