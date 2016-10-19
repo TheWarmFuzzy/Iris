@@ -4,7 +4,8 @@
 	A module to log a user in and verify the session on each page
 
 	Revision history:
-		Jeffrey Nelson 2016.10.18 Created
+		Jeffrey Nelson 2016.10.18 	Created
+		Jeffrey Nelson 2016.10.19 	Added: Session validation, database access functions
 	*/
 	
 	/*--------------------------------------------------
@@ -69,12 +70,13 @@
 	function attempt_login()
 	{
 		//Checks for post data
-		if(isset($_POST["Username"]) 
-			&& isset($_POST["Password"]))
+		if(isset($_POST["username"]) 
+			&& isset($_POST["password"]))
 		{
-			$username = $_POST["Username"];
-			$password = verify_user_credentials($_POST["Username"],$_POST["Password"]);
 			
+			$username = $_POST["username"];
+			$password = verify_user_credentials($_POST["username"],$_POST["password"]);
+
 			//Checks if credentials were valid
 			if(null != $password)
 			{
@@ -115,7 +117,7 @@
 		//If the user is not found return false
 		if(!is_array($user))
 			return null;
-		
+
 		//Check if the password provided is hashed or not
 		if($hash)
 		{
@@ -154,6 +156,10 @@
 	}
 	
 	
+	/*--------------------------------------------------
+	--Database Access-----------------------------------
+	--------------------------------------------------*/
+	
 	//Gets a user's information (username, password)
 	function get_user($username)
 	{
@@ -181,15 +187,17 @@
 	}
 	
 	//Inputs a user into the database
-	function input_user($username,$password)
+	function create_user($username,$password)
 	{
-		var_dump(get_user($username));
 		//Checks if user exists
 		if(is_array(get_user($username)))
 			return 0;
 		
 		//Prepare sql statement
 		$sql = "INSERT INTO " . USER_TABLE . " (username,password) VALUES (:username,:password)";
+		
+		//Hash the password
+		$password = password_hash($password, PASSWORD_DEFAULT);
 		
 		//Execute the query
 		$results = database\query($sql,["username"=>$username,"password"=>$password]);
@@ -198,14 +206,6 @@
 		return $results;
 	}
 	
-	$password = password_hash("HEllo",PASSWORD_DEFAULT);
-
+	create_user("there","there");
 	
-	echo password_verify("HEllo", $password);
-	echo bin2hex(openssl_random_pseudo_bytes(16));
-	
-	var_dump(input_user("art","test"));
-	
-	include("pages/error.php");
-	exit();
 ?>

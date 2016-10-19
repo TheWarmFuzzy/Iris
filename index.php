@@ -18,6 +18,8 @@ require_once("modules/config_loader.php");
 require_once("modules/database_access.php");
 require_once("modules/user_login.php");
 
+\user_login\verify_logged_in();
+
 ?>
 
 <!DOCTYPE html>
@@ -28,7 +30,23 @@ require_once("modules/user_login.php");
 </head>
 
 <body>
-	Here we go.
+	<form action="index.php" method="post">
+		<label>Username</label>
+		<input type="text" name="username">
+		<br/>
+		<label>Password</label>
+		<input type="text" name="password">
+		<br/>
+		<input type="submit">
+	</form>
+	<br/>
+	<br/>
+	<?php
+	if(isset($_SESSION["LoggedIn"]))
+		echo "Logged in.";
+	else
+		echo "Logged out.";
+	?>
 </body>
 
 </html>

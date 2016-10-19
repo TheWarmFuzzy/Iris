@@ -135,7 +135,7 @@
 			catch(\PDOException $ex)
 			{
 				//Error handling is for people with more time on their hands
-				var_dump($ex);
+				
 				//TO DO: ERROR HANDLING
 				return null;
 				
