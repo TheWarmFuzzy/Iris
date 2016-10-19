@@ -69,9 +69,31 @@
 	//Attempts to log the user in with post data 
 	function attempt_login()
 	{
+		//Check if tokens are set
+		if(!isset($_POST["__LOGIN_TOKEN"])
+			|| !isset($_SESSION["__LOGIN_TOKEN"]))
+		{
+			destroy_user_session();
+			return;
+		}
+		//Checks if token is valid
+		if(!lv\validate($_POST["__LOGIN_TOKEN"], LV_STRING)
+			|| !lv\validate($_SESSION["__LOGIN_TOKEN"], LV_STRING))
+		{
+			destroy_user_session();
+			return;
+		}
+
+		//Checks if token doesn't match
+		if($_SESSION["__LOGIN_TOKEN"] != $_POST["__LOGIN_TOKEN"])
+		{
+			destroy_user_session();
+			return;
+		}
+		
 		//Checks for post data
-		if(isset($_POST["username"]) 
-			&& isset($_POST["password"]))
+		if(lv\validate($_POST["username"],LV_STRING) 
+			&& lv\validate($_POST["password"],LV_STRING) )
 		{
 			
 			$username = $_POST["username"];

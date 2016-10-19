@@ -18,10 +18,14 @@ require_once("modules/config_loader.php");
 require_once("modules/database_access.php");
 require_once("modules/user_login.php");
 
+\user_login\destroy_user_session();
 \user_login\verify_logged_in();
 
+if(!isset($_SESSION["LoggedIn"]))
+	include("pages/login.php");
 ?>
 
+<!--
 <!DOCTYPE html>
 <html>
 <head>
@@ -41,12 +45,9 @@ require_once("modules/user_login.php");
 	</form>
 	<br/>
 	<br/>
-	<?php
-	if(isset($_SESSION["LoggedIn"]))
-		echo "Logged in.";
-	else
-		echo "Logged out.";
-	?>
+	
 </body>
 
 </html>
+
+-->
