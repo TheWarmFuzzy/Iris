@@ -9,19 +9,19 @@
 <head>
 <meta charset="UTF-8">
 <title>Welcome to Iris</title>
+<link rel="stylesheet" type="text/css" href="styles/forms.css">
 </head>
 
 <body>
 
 	<form action="index.php" method="post">
-		<label>Username</label>
-		<input type="text" name="username">
+        <div class="label text">LOGIN</div>
+		<input type="text" name="username" id="username" class="input text" placeholder="USERNAME" required>
 		<br/>
-		<label>Password</label>
-		<input type="text" name="password">
+		<input type="password" name="password" id="password"  class="input text" placeholder="PASSWORD" required>
 		<br/>
 		<input type="hidden" name="__LOGIN_TOKEN" value="<?php echo $LOGIN_TOKEN ?>">
-		<input type="submit">
+		<input type="submit" class="input button" value="LOGIN">
 	</form>
 </body>
 
