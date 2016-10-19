@@ -10,16 +10,22 @@
 	/*--------------------------------------------------
 	--Initialization------------------------------------
 	--------------------------------------------------*/
-	
+	use \lib_validation as lv;
+	use \database_access as database;
 	//Load configuration file
 	$configs = \config_loader\load(__NAMESPACE__);
 	
-	//Configuration values
-	if(null != $configs)
-		define('TEST_CONSTANT', $configs["Test"]);
+	//Check if config is valid array
+	if(lv\validate($configs,LV_ARRAY))
+	{
+		//Load DSN
+		if(lv\validate($configs["USER_TABLE"],LV_STRING))
+		define('USER_TABLE', $configs["USER_TABLE"]);
+	
+	}
 	
 	//Default values
-	defined('TEST_CONSTANT') or define('TEST_CONSTANT', "My Value");
+	defined('USER_TABLE') or define('USER_TABLE', "USER_TABLE");
 	
 	
 	/*--------------------------------------------------
@@ -82,13 +88,33 @@
 		
 	}
 	
+	
+	function get_user($username)
+	{
+		$sql = "SELECT * FROM " . USER_TABLE . " WHERE username = ?";
+		
+		$results = database\query($sql,[$username]);
+		
+		var_dump($results);
+		echo "HI";
+	}
+	
+	function input_user($username,$password)
+	{
+		$sql = "INSERT INTO " . USER_TABLE . " (username,password) VALUES (?,?)";
+		
+		$results = database\query($sql,[$username,$password]);
+
+		var_dump($results);
+	}
+	
 	$password = password_hash("Hello",PASSWORD_DEFAULT);
-	var_dump($password);
+
 	
 	echo password_verify("Hello", $password);
 	echo bin2hex(openssl_random_pseudo_bytes(16));
 	
-	
+	get_user("hello");
 	
 	include("pages/error.php");
 	exit();

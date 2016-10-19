@@ -74,6 +74,7 @@
 		//Create pdo connection
 		$pdo = new PDOConnection($pdo_input);
 		
+		var_dump($sql);
 		//Run query
 		$pdo->query($sql,$args);
 		
@@ -124,18 +125,18 @@
 				
 				//Replaces result with id of last value if there are no results
 				//This is used for creating foreign keys
+				//Apparently its only with PostgreSQL
 				if(count($result)<1){
-					$result = $this->pdo_connection->lastInsertId();
+					
+					//$result = $this->pdo_connection->lastInsertId();
 				}
-				
 				return $result;
 			}
 			catch(\PDOException $ex)
 			{
 				//Error handling is for people with more time on their hands
-				
+				var_dump($ex);
 				//TO DO: ERROR HANDLING
-				
 				return null;
 				
 				
