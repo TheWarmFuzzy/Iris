@@ -4,27 +4,80 @@
 	A module to connect to databases
 
 	Revision history:
-		Jeffrey Nelson 2016.10.18 Created
+		Jeffrey Nelson 2016.10.18 	Created
+		Jeffrey Nelson 2016.10.19 	Added: query function, configuration loading
+
 	*/
 
 	/*--------------------------------------------------
 	--Initialization------------------------------------
 	--------------------------------------------------*/
 	
+	//Namespaces
 	use \PDO;
+	use \lib_validation as lv;
+	
+	//Load configuration file
+	$configs = \config_loader\load(__NAMESPACE__);
+	
+	//Check if config is valid array
+	if(lv\validate($configs,LV_ARRAY))
+	{
+		//Load DSN
+		if(lv\validate($configs["DSN"],LV_STRING))
+			define('DSN', $configs["DSN"]);
+
+		//Load Host
+		if(lv\validate($configs["HOST"],LV_STRING))
+			define('HOST', $configs["HOST"]);
+		
+		//Load database name
+		if(lv\validate($configs["DBNAME"],LV_STRING))
+			define('DBNAME', $configs["DBNAME"]);
+		
+		//Load database username
+		if(lv\validate($configs["USERNAME"],LV_STRING))
+			define('USERNAME', $configs["USERNAME"]);
+		
+		//Load database password, allows empty string
+		if(lv\validate($configs["PASSWORD"],LV_STRING, true))
+			//Lets not store passwords in global constants
+			define('PASSWORD', $configs["PASSWORD"]);
+	}
+	
+	//Set default configuration if config file failed
+	defined('DSN') or define('DSN', "ONE OF PGSQL, MYSQL, ETC");
+	defined('HOST') or define('HOST', "localhost");
+	defined('DBNAME') or define('DBNAME', "DATABASE_NAME");
+	defined('USERNAME') or define('USERNAME', "USERNAME");
+	//Lets not store passwords in global constants
+	//TO DO: find a solution to this
+	defined('PASSWORD') or define('PASSWORD', "PASSWORD");
+	
 	
 	/*--------------------------------------------------
 	--Contents------------------------------------------
 	--------------------------------------------------*/
 	
-	$pdo_input = [
-		"DSN" => "mysql",
-		"host" => "localhost",
-		"dbname" => "test",
-		"user" => "root",
-		"pass" => ""
-	];
-	$pdo = new PDOConnection($pdo_input);
+	//Runs a query on a database
+	function query($sql,$args = [])
+	{
+		//Prepare inputs
+		$pdo_input = [
+			"DSN" => DSN,
+			"host" => HOST,
+			"dbname" => DBNAME,
+			"user" => USERNAME,
+			"pass" => PASSWORD
+		];
+
+		//Create pdo connection
+		$pdo = new PDOConnection($pdo_input);
+		
+		//Run query
+		$pdo->query($sql,$args);
+		
+	}
 	
 	class PDOConnection
 	{
@@ -35,12 +88,12 @@
 		{
 			
 			//Checks for required input
-			if(!\lib_validation\validate($input,LV_ARRAY) 
-				|| !\lib_validation\validate($input["DSN"],LV_STRING)
-				|| !\lib_validation\validate($input["host"],LV_STRING)
-				|| !\lib_validation\validate($input["dbname"],LV_STRING)
-				|| !\lib_validation\validate($input["user"],LV_STRING)
-				|| !\lib_validation\validate($input["pass"],LV_STRING,true))
+			if(!lv\validate($input,LV_ARRAY) 
+				|| !lv\validate($input["DSN"],LV_STRING)
+				|| !lv\validate($input["host"],LV_STRING)
+				|| !lv\validate($input["dbname"],LV_STRING)
+				|| !lv\validate($input["user"],LV_STRING)
+				|| !lv\validate($input["pass"],LV_STRING,true))
 				throw new \Exception("Invalid inputs for PDO class.");
 
 			//Create string for PDO object
