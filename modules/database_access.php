@@ -46,7 +46,7 @@
 	}
 	
 	//Set default configuration if config file failed
-	defined('DSN') or define('DSN', "ONE OF PGSQL, MYSQL, ETC");
+	defined('DSN') or define('DSN', "mysql");
 	defined('HOST') or define('HOST', "localhost");
 	defined('DBNAME') or define('DBNAME', "DATABASE_NAME");
 	defined('USERNAME') or define('USERNAME', "USERNAME");
@@ -74,10 +74,11 @@
 		//Create pdo connection
 		$pdo = new PDOConnection($pdo_input);
 		
-		var_dump($sql);
 		//Run query
-		$pdo->query($sql,$args);
+		$result = $pdo->query($sql,$args);
 		
+		//Actually return the fucking value
+		return $result;
 	}
 	
 	class PDOConnection

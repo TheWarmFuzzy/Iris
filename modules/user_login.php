@@ -91,19 +91,18 @@
 	
 	function get_user($username)
 	{
-		$sql = "SELECT * FROM " . USER_TABLE . " WHERE username = ?";
+		$sql = "SELECT * FROM " . USER_TABLE . " WHERE username = :username";
 		
-		$results = database\query($sql,[$username]);
+		$results = database\query($sql,["username"=>$username]);
 		
 		var_dump($results);
-		echo "HI";
 	}
 	
 	function input_user($username,$password)
 	{
-		$sql = "INSERT INTO " . USER_TABLE . " (username,password) VALUES (?,?)";
+		$sql = "INSERT INTO " . USER_TABLE . " (username,password) VALUES (:username,:password)";
 		
-		$results = database\query($sql,[$username,$password]);
+		$results = database\query($sql,["username"=>$username,"password"=>$password]);
 
 		var_dump($results);
 	}
@@ -114,7 +113,7 @@
 	echo password_verify("Hello", $password);
 	echo bin2hex(openssl_random_pseudo_bytes(16));
 	
-	get_user("hello");
+	get_user("hello","test");
 	
 	include("pages/error.php");
 	exit();
