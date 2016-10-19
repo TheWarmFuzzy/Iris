@@ -78,7 +78,7 @@
 		$result = $pdo->query($sql,$args);
 		
 		//Actually return the fucking value
-		return $result;
+		return $result["0"];
 	}
 	
 	class PDOConnection
@@ -126,10 +126,9 @@
 				
 				//Replaces result with id of last value if there are no results
 				//This is used for creating foreign keys
-				//Apparently its only with PostgreSQL
 				if(count($result)<1){
 					
-					//$result = $this->pdo_connection->lastInsertId();
+					$result = $this->pdo_connection->lastInsertId();
 				}
 				return $result;
 			}
