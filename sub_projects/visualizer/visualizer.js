@@ -41,12 +41,11 @@ class Visualizer{
 	draw(){
 		
 		this.system.draw(this.ctx_mask);
-		
 		this.ctx.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
 		
 		
 		//Dull Buffer
-		this.ctx_mask.fillStyle="rgba(0,0,0,1)";
+		this.ctx_mask.fillStyle="rgb(0,0,0)";
 		this.ctx_mask.fillRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
 		//this.ctx_mask.clearRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
 		//reduce_whites(this.ctx_mask, 1);
@@ -91,43 +90,120 @@ class ParticleSystem{
 
 class Particle{
 	constructor(){
-		this.x = 250;
-		this.y = 250;
 		this.radius = 4;
+		this.speed = 1;
+		this.change_timer = 0;
+		this.direction = 0;
+		this.update_change_timer_max(this.direction);
+
+		
+		
+		//Physical attributes
+		this.length = 600 + (Math.random() * 150 * this.radius)|0;
+		
+		//Virtual Attributes
+		this.position = new Vector((Math.random() * 1000)|0,(Math.random() * 400)|0);
+		this.velocity = [];
+		this.velocity[-1] = new Vector(this.speed / 1.414,-this.speed / 1.414);
+		this.velocity[0] = new Vector(this.speed,0);
+		this.velocity[1] = new Vector(this.speed / 1.414,this.speed / 1.414);
+		
 		this.vertices = [];
-		this.vertices[0] = [this.x - 800, this.y];
+		this.vertices[0] = new Vector(this.position.x - this.length, this.position.y);
+	}
+	
+	init(){
+		
 	}
 	
 	update(){
-		this.x = (this.x + 1.5) % (1800 + this.radius * 2);
+		
+		this.position.add(this.velocity[this.direction]);
+		
+		this.change_timer++;
+		//Makes diagonals shorter
+		
+		if (this.change_timer > this.change_timer_max - this.direction_mod|0){
+			this.change_timer = 0;
+			this.change_direction();
+			this.update_change_timer_max(this.direction);
+		}
+		//Check if the first vertex is unused
+		if("undefined" != typeof this.vertices[1]){
+			//TO DO: multi-directional
+			if(this.vertices[1].x < this.position.x - this.length){
+				this.shift_vertices();
+			}
+		}
 	}
 	
 	draw(ctx){
 		ctx.fillStyle="#fff";
 		ctx.beginPath();
-		ctx.arc(this.x|0,this.y|0,this.radius,0,2*Math.PI);
+		ctx.arc(this.position.x|0,this.position.y|0,this.radius,0,2*Math.PI);
 		ctx.fill();
 		
-		ctx.lineWidth=2;
+		ctx.lineWidth=Math.ceil(this.radius / 3);
 		
-		var my_gradient=ctx.createLinearGradient(this.x - 800,0,this.x,0);
+		var my_gradient=ctx.createLinearGradient(this.position.x - this.length,0,this.position.x,0);
 		my_gradient.addColorStop(0,"rgba(255,255,255,0)");
 		my_gradient.addColorStop(1,"rgba(255,255,255,1)");
 		ctx.strokeStyle = my_gradient;
 		//ctx.fillRect(this.x - 800, this.y - 1, 800, 2);
 		ctx.beginPath();
-		ctx.moveTo(this.vertices[0][0],this.vertices[0][1]);
+		ctx.moveTo(this.vertices[0].x,this.vertices[0].y);
 		for(var i = 1; i < this.vertices.length; i++){
-			ctx.lineTo(this.vertices[i][0],this.vertices[i][1]);
+			ctx.lineTo(this.vertices[i].x,this.vertices[i].y);
 		}
-		ctx.lineTo(this.x,this.y);
+		ctx.lineTo(this.position.x,this.position.y);
 		ctx.stroke();
 	}
 	
+	//Shifts vertices to remove the oldest element
 	shift_vertices(){
+		
+		//Shift all vertices down one
+		for(var i = 1; i < this.vertices.length; i++){
+			this.vertices[i - 1] = this.vertices[i];
+		}
+		//Remove the newest vertex (duplicate)
+		this.vertices.splice(this.vertices.length - 1, 1);
+
+	}
+	
+	change_direction(){
+		this.vertices[this.vertices.length] = new Vector(this.position.x, this.position.y);
+		
+		switch(this.direction){
+			case 0:
+				this.direction = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
+				break;
+			case -1:
+			case 1:
+				this.direction = 0;
+				break;
+			
+		}
 		
 	}
 	
+	update_change_timer_max(direction){
+		this.change_timer_max = 160 + (Math.random() * 300)|0;
+		this.direction_mod = this.change_timer_max * 0.6 + (Math.random() * 0.35) * Math.abs(direction);
+	}
+}
+
+class Vector{
+	
+	constructor(x,y){
+		this.x = x;
+		this.y = y;
+	}
+	
+	add(vector){
+		this.x += vector.x;
+		this.y += vector.y;
+	}
 }
 
 /*
