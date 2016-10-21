@@ -68,12 +68,12 @@ class ParticleSystem{
 		this.y = 250;
 		this.radius = 3;
 		this.particles = [];
-		this.particle_count = 24;
+		this.particle_count = 16;
 	}
 	
 	init(){
 		for(var i = 0; i < this.particle_count; i++){
-			this.particles[i] = new Particle();
+			this.particles[i] = new Particle(i);
 			this.particles[i].init();
 		}
 	}
@@ -92,30 +92,30 @@ class ParticleSystem{
 }
 
 class Particle{
-	constructor(){
+	constructor(id){
 		//Magical attributes
 		this.magic_direction_constant = 0.707;
 		this.magic_opacity_constant = 0.07142;
 		
 		//Physical attributes
-		this.radius = (Math.random() * 12)|0 + 2;
-		this.speed = this.radius / 3;
+		this.radius = Math.ceil(id * 0.5) + 1;
+		this.speed = this.radius / 18;
 		this.length = 600 + (Math.random() * 150 * this.radius)|0;
 		this.trail_width = Math.ceil(this.radius / 3);
 		
 		//Position Attributes
-		this.direction = new Vector(this.get_direction(),0); //x = -1 (Left) x = 1 (Right), y = -1 (Up) y = 0 (Straight) y = 1 (Down) 
-		this.position = new Vector((Math.random() * window.innerWidth)|0,(Math.random() * window.innerHeight)|0);
+		this.direction = new Vector(id%2 == 1 ? -1 : 1,((Math.random() * 3)|0) - 1); //x = -1 (Left) x = 1 (Right), y = -1 (Up) y = 0 (Straight) y = 1 (Down) 
+		this.position = new Vector((Math.random() * window.innerWidth)|0,(random_normal_distribution() * window.innerHeight)|0);
 		this.velocity = new Vector(this.speed * this.direction.x,0);
 
 		//Direction change timer variables
 		this.dct = 0;
-		this.dctm = this.get_new_dctm();
+		this.dctm;
 
 		//Vertex array for drawing the particle trail
 		this.vertices = [];
-		//Initial trail end
-		this.vertices[0] = new Vector(this.position.x - this.length * this.direction.x , this.position.y);
+		
+		this.change_direction();
 	}
 	
 	init(){
@@ -154,7 +154,7 @@ class Particle{
 		
 		//Off the right side
 		if(this.vertices[0].x > screen.width && 1 == this.direction.x){
-			this.position = new Vector((Math.random() * -100)|0,(Math.random() * window.innerHeight)|0);
+			this.position = new Vector((Math.random() * -100)|0,(random_normal_distribution() * window.innerHeight)|0);
 			this.vertices = [];
 			this.vertices[0] = new Vector(this.position.x - this.length, this.position.y);
 			this.direction.y = 0;
@@ -162,7 +162,7 @@ class Particle{
 		
 		//Off the left side
 		if(this.vertices[0].x < 0 && -1 == this.direction.x){
-			this.position = new Vector((Math.random() * 100)|0 + window.innerWidth,(Math.random() * window.innerHeight)|0);
+			this.position = new Vector((Math.random() * 100)|0 + window.innerWidth,(random_normal_distribution() * window.innerHeight)|0);
 			this.vertices = [];
 			this.vertices[0] = new Vector(this.position.x + this.length, this.position.y);
 			this.direction.y = 0;
@@ -228,7 +228,7 @@ class Particle{
 			this.direction.y = this.get_direction();
 			
 			//Scale the time down a bit for diagonals
-			this.dctm *= 0.7 + (Math.random() * 0.25);
+			this.dctm *= 0.3 - (Math.random() * 0.25);
 			
 		}else{
 			//Middle
@@ -239,7 +239,7 @@ class Particle{
 	
 	//Gets a new direction change timer maximum value
 	get_new_dctm(){
-		return 160 + (Math.random() * 300)|0;
+		return 600 + (Math.random() * 300)|0;
 	}
 	
 	//Returns -1 or 1
@@ -300,4 +300,9 @@ class Filter{
 		ctx.fillStyle = my_gradient;
 		ctx.fillRect(0,canvas.height - border_size,canvas.width,canvas.height);
 	}
+}
+
+// Random number based on central limit theorem
+function random_normal_distribution() {
+    return (Math.random() + Math.random() + Math.random()) / 3;
 }
