@@ -306,3 +306,9 @@ class Filter{
 function random_normal_distribution() {
     return (Math.random() + Math.random() + Math.random()) / 3;
 }
+
+
+class ImageLibrary{
+	
+	
+}
