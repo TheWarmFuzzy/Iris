@@ -1,5 +1,7 @@
 class Visualizer{
-	constructor(width, height){
+	constructor(){
+		this.width = window.innerWidth;
+		this.height = window.innerHeight;
 		this.canvas = document.createElement('canvas');
 		this.ctx = this.canvas.getContext("2d");
 		
@@ -10,9 +12,10 @@ class Visualizer{
 		this.ctx_mask = this.canvas_mask.getContext("2d");
 		
 		this.canvas.id = "canvas_visualizer";
-		this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = width;
-		this.canvas.height = this.canvas_buffer.height = this.canvas_mask.height = height;
-		//this.canvas.style.webkitFilter = "blur(1px)";
+		this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = this.width;
+		this.canvas.height = this.canvas_buffer.height = this.canvas_mask.height = this.height;
+		this.canvas.style.webkitFilter = "blur(1px)";
+		this.canvas.style.backgroundColor = "#000";
 		
 		this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
 		this.ctx_buffer.fillRect(0,0,this.canvas_buffer.width,this.canvas_buffer.height);
@@ -34,31 +37,46 @@ class Visualizer{
 	}
 	
 	update(){
-
+		this.render_frame = true;
+		if(window.innerWidth != this.width){
+			this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = window.innerWidth;
+			this.width = window.innerWidth;
+		}
+		
+		if(window.innerHeight != this.height){
+			this.canvas.height = this.canvas_buffer.height = this.canvas_mask.height = window.innerHeight;
+			this.height = window.innerHeight;
+		}
+		
 		this.system_dot.update();
 		this.system_trail.update();
 		
 		this.draw();
+
 	}
 	
 	draw(){
 		
+		//Reset Buffer
+		this.ctx_buffer.fillStyle="#08f";
+		this.ctx_buffer.fillRect(0,0,screen.width * 2,screen.height * 2);
+		
+		//Reset Mask
+		this.ctx_mask.fillStyle="#000";
+		this.ctx_mask.fillRect(0,0,screen.width * 2,screen.height * 2);
+		
+		//Draw systems
 		this.system_dot.draw(this.ctx_mask);
 		this.system_trail.draw(this.ctx_mask);
 		Filter.faded_border(this.canvas_mask, 150);
-		this.ctx.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
 		
+		//Draw mask over buffer
+		this.ctx_buffer.globalCompositeOperation="multiply";
+		this.ctx_buffer.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_buffer.globalCompositeOperation="source-over";
 		
-		//Dull Buffer
-		this.ctx_mask.fillStyle="rgb(0,0,0)";
-		this.ctx_mask.fillRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
-		//this.ctx_mask.clearRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
-		//reduce_whites(this.ctx_mask, 1);
-		
-		//Reset Buffer
-		this.ctx_buffer.fillStyle="#000";
-		this.ctx_buffer.fillRect(0,0,this.canvas_buffer.width,this.canvas_buffer.height);
-		
+		//Draw to main canvas
+		this.ctx.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
 		
 	}
 }
