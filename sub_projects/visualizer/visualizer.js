@@ -22,7 +22,7 @@ class Visualizer{
 		this.ctx_mask.fillRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
 		document.body.appendChild(this.canvas);
 		
-		this.system_dot = new ParticleSystem(P_Dot,32);
+		this.system_dot = new ParticleSystem(P_Dot,64);
 		this.system_trail = new ParticleSystem(P_Circuit_Trail,16);
 		
 	}
@@ -145,7 +145,7 @@ class P_Dot extends Particle{
 	init(){
 		//Physical
 		this.position = new Vector(((random_normal_distribution() * window.innerWidth)|0), ((random_normal_distribution() * window.innerHeight)|0));
-		this.radius = random_normal_distribution() * this.id + 2;
+		this.radius = random_normal_distribution() * Math.max(this.id, 24) * 0.2 + 2;
 		
 		//Emotional
 		this.current_life = random_normal_distribution() * 400;
@@ -321,7 +321,7 @@ class P_Circuit_Trail extends Particle{
 			this.direction.y = this.get_direction();
 			
 			//Scale the time down a bit for diagonals
-			this.dctm *= 0.3 - (Math.random() * 0.25);
+			this.dctm *= 0.2 - (Math.random() * 0.15);
 			
 		}else{
 			//Middle
@@ -332,7 +332,7 @@ class P_Circuit_Trail extends Particle{
 	
 	//Gets a new direction change timer maximum value
 	get_new_dctm(){
-		return 600 + (Math.random() * 300)|0;
+		return (random_normal_distribution() * 900)|0;
 	}
 	
 	//Returns -1 or 1
