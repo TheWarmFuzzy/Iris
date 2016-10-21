@@ -5,10 +5,10 @@
 <title>Visualizer</title>
 </head>
 
-<body>
+<body style="margin:0px; overflow:hidden;">
 <script type="text/javascript" src="visualizer.js"></script>
 <script type="text/javascript">
-	var test = new Visualizer(1000,400);
+	var test = new Visualizer(window.innerWidth,window.innerHeight);
 	test.start();
 </script>
 
