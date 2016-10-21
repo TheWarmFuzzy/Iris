@@ -19,29 +19,32 @@ class Visualizer{
 		this.ctx_mask.fillRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
 		document.body.appendChild(this.canvas);
 		
-		this.system = new ParticleSystem(width, height);
-		
+		this.system_dot = new ParticleSystem(P_Dot,32);
+		this.system_trail = new ParticleSystem(P_Circuit_Trail,16);
 		
 	}
 	
 	start(){
 		var self = this;
 		
-		this.system.init();
+		this.system_dot.init();
+		this.system_trail.init();
 		
 		this.update_timer = setInterval(function(){self.update();}, 1000/60);
 	}
 	
 	update(){
 
-		this.system.update();
+		this.system_dot.update();
+		this.system_trail.update();
 		
 		this.draw();
 	}
 	
 	draw(){
 		
-		this.system.draw(this.ctx_mask);
+		this.system_dot.draw(this.ctx_mask);
+		this.system_trail.draw(this.ctx_mask);
 		Filter.faded_border(this.canvas_mask, 150);
 		this.ctx.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
 		
@@ -61,19 +64,20 @@ class Visualizer{
 }
 
 class ParticleSystem{
-	constructor(width, height){
+	constructor(particle,count){
 		
 		
 		this.x = 250;
 		this.y = 250;
 		this.radius = 3;
+		this.particle = particle;
 		this.particles = [];
-		this.particle_count = 16;
+		this.particle_count = count;
 	}
 	
 	init(){
 		for(var i = 0; i < this.particle_count; i++){
-			this.particles[i] = new Particle(i);
+			this.particles[i] = new this.particle(i);
 			this.particles[i].init();
 		}
 	}
@@ -91,8 +95,79 @@ class ParticleSystem{
 	}
 }
 
+
 class Particle{
 	constructor(id){
+		
+	}
+	init(){
+		
+	}
+	
+	update(){
+		
+	}
+	
+	draw(ctx){
+		
+	}
+}
+
+class P_Dot extends Particle{
+	constructor(id){
+		super(id,id);
+		this.id = id;
+		this.radius;
+		this.lifespan;
+		this.current_life;
+		this.position;
+		this.life_value; // % of life left
+	}
+	
+	init(){
+		//Physical
+		this.position = new Vector(((random_normal_distribution() * window.innerWidth)|0), ((random_normal_distribution() * window.innerHeight)|0));
+		this.radius = random_normal_distribution() * this.id + 2;
+		
+		//Emotional
+		this.current_life = random_normal_distribution() * 400;
+		this.lifespan = random_normal_distribution() * 800;
+		this.life_value = 1 - this.current_life / this.lifespan;
+	}
+	
+	update(){
+		
+		//Checks if the particle is dead
+		if(this.lifespan <= ++this.current_life){
+			//Un-dead it
+			this.init();
+		}
+		
+		//Set the life value
+		this.life_value = 1 - this.current_life / this.lifespan;
+		this.life_value = this.life_value < 0 ? 0 : this.life_value;
+		//Change the radius
+		//this.radius *= this.life_value;
+	}
+	
+	draw(ctx){
+		
+		//Draw circle
+		var c = (255 * this.life_value)|0;
+		ctx.fillStyle="rgba("+c+","+c+","+c+",1)";
+		ctx.beginPath();
+		ctx.arc(this.position.x|0,this.position.y|0,this.radius * this.life_value,0,2*Math.PI);
+		ctx.fill();
+		
+	}
+}
+
+class P_Circuit_Trail extends Particle{
+	constructor(id){
+		//Don't forget the super
+		super(id, id);
+		
+		this.id = id;
 		//Magical attributes
 		this.magic_direction_constant = 0.707;
 		this.magic_opacity_constant = 0.07142;
