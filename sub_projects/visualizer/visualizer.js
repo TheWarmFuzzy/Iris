@@ -23,7 +23,7 @@ class Visualizer{
 		document.body.appendChild(this.canvas);
 		
 		this.system_dot = new ParticleSystem(P_Dot,64);
-		this.system_trail = new ParticleSystem(P_Circuit_Trail,16);
+		this.system_trail = new ParticleSystem(P_Circuit_Trail,24);
 		
 	}
 	
@@ -145,7 +145,7 @@ class P_Dot extends Particle{
 	init(){
 		//Physical
 		this.position = new Vector(((random_normal_distribution() * window.innerWidth)|0), ((random_normal_distribution() * window.innerHeight)|0));
-		this.radius = random_normal_distribution() * Math.max(this.id, 24) * 0.2 + 2;
+		this.radius = random_normal_distribution() * Math.min(this.id, 24) * 0.5 + 2;
 		
 		//Emotional
 		this.current_life = random_normal_distribution() * 400;
@@ -191,7 +191,7 @@ class P_Circuit_Trail extends Particle{
 		this.magic_opacity_constant = 0.07142;
 		
 		//Physical attributes
-		this.radius = Math.ceil(id * 0.5) + 1;
+		this.radius = Math.ceil(Math.min(id,12) * random_normal_distribution()) + 1;
 		this.speed = this.radius / 18;
 		this.length = 600 + (Math.random() * 150 * this.radius)|0;
 		this.trail_width = Math.ceil(this.radius / 3);
