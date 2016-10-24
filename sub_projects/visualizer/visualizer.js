@@ -1,5 +1,6 @@
 class Visualizer{
 	constructor(){
+		var self = this;
 		this.width = window.innerWidth;
 		this.height = window.innerHeight;
 		this.canvas = document.createElement('canvas');
@@ -10,6 +11,10 @@ class Visualizer{
 		
 		this.canvas_mask = document.createElement('canvas');
 		this.ctx_mask = this.canvas_mask.getContext("2d");
+		
+		this.image_library = new ImageLibrary();
+		this.image_library.new_image("Cloud","images/cloud.png");
+		this.image_library.onload(function(){self.start();});
 		
 		this.canvas.id = "canvas_visualizer";
 		this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = this.width;
@@ -400,8 +405,46 @@ function random_normal_distribution() {
     return (Math.random() + Math.random() + Math.random()) / 3;
 }
 
-
+//Image library to load images
 class ImageLibrary{
+	constructor(){
+		this.image = [];
+		this.image_count = 0;
+		this.images_loaded = 0;
+		this.onload_func;
+	}
 	
+	//Adds a new image to be loaded
+	new_image(name,src){
+		//Ensure proper types
+		if("string" != typeof name || "string" != typeof src)
+			return false;
+		
+		//Ensure it doesn't overwrite an image
+		if("undefined" != typeof this.image[name])
+			return false;
+		
+		//Set the image up to load
+		var self = this;
+		this.image[name] = new Image;
+		this.image[name].onload = function(){
+			self.on_image_load();
+		};
+		this.image[name].src = src;
+	}
+	
+	//Naming style changed to match native javascript
+	onload(func){
+		this.onload_func = func;
+	}
+	
+	//Runs the onload function if all of the images are loaded
+	on_image_load(){
+		if(++this.images_loaded < this.image_count)
+			return false;
+		
+		if("undefined" != typeof this.onload_func)
+			this.onload_func();
+	}
 	
 }
