@@ -29,7 +29,7 @@ class Visualizer{
 		
 		this.system_dot = new ParticleSystem(P_Dot,64);
 		this.system_trail = new ParticleSystem(P_Circuit_Trail,24);
-		
+		this.system_cloud = new ParticleSystem(P_Cloud,8);
 	}
 	
 	start(){
@@ -37,6 +37,9 @@ class Visualizer{
 		
 		this.system_dot.init();
 		this.system_trail.init();
+		this.system_cloud.set_image(this.image_library.image["Cloud"]);
+		this.system_cloud.init();
+		
 		
 		this.update_timer = setInterval(function(){self.update();}, 1000/60);
 	}
@@ -55,7 +58,7 @@ class Visualizer{
 		
 		this.system_dot.update();
 		this.system_trail.update();
-		
+		this.system_cloud.update();
 		this.draw();
 
 	}
@@ -73,13 +76,18 @@ class Visualizer{
 		//Draw systems
 		this.system_dot.draw(this.ctx_mask);
 		this.system_trail.draw(this.ctx_mask);
+		//this.system_cloud.draw(this.ctx_buffer);
 		Filter.faded_border(this.canvas_mask, 150);
+		
 		
 		//Draw mask over buffer
 		this.ctx_buffer.globalCompositeOperation="multiply";
 		this.ctx_buffer.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
 		this.ctx_buffer.globalCompositeOperation="source-over";
 		
+		
+		
+
 		//Draw to main canvas
 		this.ctx.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
 		
@@ -88,19 +96,20 @@ class Visualizer{
 
 class ParticleSystem{
 	constructor(particle,count){
-		
-		
 		this.x = 250;
 		this.y = 250;
 		this.radius = 3;
 		this.particle = particle;
 		this.particles = [];
 		this.particle_count = count;
+		this.image;
+			
 	}
 	
 	init(){
 		for(var i = 0; i < this.particle_count; i++){
 			this.particles[i] = new this.particle(i);
+			this.particles[i].set_image(this.image);
 			this.particles[i].init();
 		}
 	}
@@ -115,6 +124,13 @@ class ParticleSystem{
 		for(var i = 0; i < this.particle_count; i++){
 			this.particles[i].draw(ctx);
 		}
+	}
+	
+	set_image(image){
+		if("undefined" == typeof image)
+			return;
+		
+		this.image = image;
 	}
 }
 
@@ -134,6 +150,97 @@ class Particle{
 	draw(ctx){
 		
 	}
+	
+	set_image(image){
+		
+	}
+}
+
+class P_Cloud extends Particle{
+	constructor(id){
+		super (id,id);
+		this.id = id;
+		this.scale;
+		this.width;
+		this.height;
+		this.position;
+		this.velocity;
+		this.rotation;
+		this.rotation_velocity;
+		this.image;
+		this.colour;
+		this.colour_base;
+		this.colour_variation;
+		this.colour_canvas = document.createElement('canvas');
+		this.colour_ctx = this.colour_canvas.getContext("2d");
+		this.opacity;
+		
+	}
+	
+	init(){
+		this.scale = Math.random() * 0.7 + 0.1;
+		this.width = this.image.width * this.scale;
+		this.height = this.image.height * this.scale;
+		this.position = new Vector(window.innerWidth,random_normal_distribution()*window.innerHeight);
+		this.velocity = new Vector(-Math.random() * 2 - 0.1,Math.random() * 0.2 - 0.1);
+		this.rotation = 360 * Math.random();
+		this.rotation_velocity = 0.1 * Math.random() - 0.05;
+		this.opacity = Math.random()*0.5 + 0.5;
+		
+		this.colour_base = 170;
+		this.colour_variation = 60;
+		this.colour = "hsl("+ (this.colour_base + ((this.colour_variation * Math.random())|0)) +", 100%, 50%)";
+		this.colour_canvas.width = this.colour_canvas.height = this.width > this.height ? (this.width * 1.415)|0 : (this.height * 1.415)|0;
+		
+	}
+	
+	update(){
+		this.rotation = (this.rotation + this.rotation_velocity) % 360;
+		this.position.add(this.velocity);
+		
+		if(this.position.x < 0 - this.colour_canvas.width)
+			this.init();
+	}
+	
+	draw(ctx){
+		//Don't draw if there isn't an image
+		if("undefined" == typeof this.image)
+			return;
+		
+		//Reset Buffer
+		this.colour_ctx.globalCompositeOperation="source-over";
+		this.colour_ctx.fillStyle = this.colour;
+		this.colour_ctx.fillRect(0,0,this.colour_canvas.width,this.colour_canvas.height);
+		
+		
+		this.colour_ctx.save();
+		
+		//Transform
+		this.colour_ctx.translate( this.colour_canvas.width * 0.5, this.colour_canvas.height * 0.5 );
+		this.colour_ctx.rotate(this.rotation*Math.PI/180);
+		this.colour_ctx.translate( -this.colour_canvas.width * 0.5, -this.colour_canvas.height * 0.5 );
+		
+		//Use image as alpha channel for colour
+		this.colour_ctx.globalCompositeOperation="destination-in";
+		this.colour_ctx.drawImage(this.image,this.colour_canvas.width * 0.5 - this.width * 0.5,this.colour_canvas.height * 0.5 - this.height * 0.5,this.width,this.height);
+		
+		this.colour_ctx.restore();
+		
+		//Set the opacity
+		ctx.globalAlpha = this.opacity;
+		
+		//Draw to main canvas
+		ctx.drawImage(this.colour_canvas,this.position.x - this.colour_canvas.width * 0.5,this.position.y - this.colour_canvas.height * 0.5,this.colour_canvas.width,this.colour_canvas.height);
+		
+		//Reset the opacity
+		ctx.globalAlpha = 1;
+	}
+	
+	set_image(image){
+		this.image = image;
+	}
+		
+	
 }
 
 class P_Dot extends Particle{
