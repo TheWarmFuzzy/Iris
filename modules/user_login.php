@@ -92,23 +92,31 @@
 		}
 		
 		//Checks for post data
-		if(lv\validate($_POST["username"],LV_STRING) 
-			&& lv\validate($_POST["password"],LV_STRING) )
+		if(!lv\validate($_POST["username"],LV_STRING) 
+			|| !lv\validate($_POST["password"],LV_STRING) )
 		{
-			
-			$username = $_POST["username"];
-			$password = verify_user_credentials($_POST["username"],$_POST["password"]);
-
-			//Checks if credentials were valid
-			if(null != $password)
-			{
-				create_user_session($username,$password);
-				return;
-			}
+			destroy_user_session();
+			return;
 		}
 		
-		//User has failed to log in
-		destroy_user_session();
+		//Checks that the username matchs the regular expression
+		$username = $_POST["username"];
+		$regex = "[A-Za-z0-9_-]";
+		if(!preg_match($regex,$username)){
+			destroy_user_session();
+			return;
+		}
+			
+		//Checks if the username and password match and returns the password hash
+		$password = verify_user_credentials($_POST["username"],$_POST["password"]);
+
+		//Checks if credentials were valid
+		if(null != $password)
+		{
+			create_user_session($username,$password);
+			return;
+		}
+		
 	}
 	
 	//Destroys the user's session information

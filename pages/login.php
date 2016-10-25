@@ -16,7 +16,7 @@
 
 	<form action="index.php" method="post">
         <div class="label text">LOGIN</div>
-		<input type="text" name="username" id="username" class="input text" placeholder="USERNAME" required>
+		<input type="text" name="username" id="username" class="input text" placeholder="USERNAME" pattern="[A-Za-z0-9_-]"required>
 		<br/>
 		<input type="password" name="password" id="password"  class="input text" placeholder="PASSWORD" required>
 		<br/>
