@@ -30,8 +30,8 @@ class Visualizer{
 
 		document.body.appendChild(this.canvas);
 		
-		this.system_dot = new ParticleSystem(P_Dot,64);
-		this.system_trail = new ParticleSystem(P_Circuit_Trail,24);
+		this.system_dot = new ParticleSystem(P_Dot,48);
+		this.system_trail = new ParticleSystem(P_Circuit_Trail,20);
 		this.system_cloud = new ParticleSystem(P_Cloud,8);
 	}
 	
@@ -94,7 +94,7 @@ class Visualizer{
 		this.ctx_buffer.translate(this.canvas_buffer.width,0);
 		this.ctx_buffer.scale(-1,1);
 		
-		this.ctx_buffer.globalAlpha = 0.3;
+		this.ctx_buffer.globalAlpha = 0.15;
 		this.ctx_buffer.drawImage(this.canvas_clouds,0,0,this.canvas_buffer.width,this.canvas_buffer.height);
 		this.ctx_buffer.globalAlpha = 1;
 		
@@ -112,13 +112,17 @@ class Visualizer{
 		
 		//Change hue of clouds
 		this.ctx_clouds.globalCompositeOperation="hue";
-		this.ctx_clouds.fillStyle="#0f8";
+		this.ctx_clouds.fillStyle="#0f4";
 		this.ctx_clouds.fillRect(0,0,screen.width,screen.height);
 		this.ctx_clouds.globalCompositeOperation="source-over";
 		
 		//Draw clouds over dots
 		this.ctx_dots.globalCompositeOperation="multiply";
 		this.ctx_dots.drawImage(this.canvas_clouds,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_dots.globalCompositeOperation="source-over";
+		
+		this.ctx_dots.globalCompositeOperation="hard-light";
+		this.ctx_dots.drawImage(this.canvas_dots,0,0,this.canvas.width,this.canvas.height);
 		this.ctx_dots.globalCompositeOperation="source-over";
 
 		//Draw dots to buffer
@@ -132,9 +136,9 @@ class Visualizer{
 		this.ctx_buffer.globalCompositeOperation="source-over";
 		
 		//Amplify colours
-		this.ctx_buffer.globalCompositeOperation="overlay";
-		this.ctx_buffer.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
-		this.ctx_buffer.globalCompositeOperation="source-over";
+		//this.ctx_buffer.globalCompositeOperation="overlay";
+		//this.ctx_buffer.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
+		//this.ctx_buffer.globalCompositeOperation="source-over";
 		
 		//Draw border on buffer
 		Filter.faded_border(this.canvas_buffer, 150);
@@ -202,7 +206,12 @@ class Particle{
 	}
 	
 	set_image(image){
-		
+		this.image = image;
+	}
+	
+	//Returns -1 or 1
+	get_direction(){
+		return ((Math.random() * 2)|0) == 0 ? -1 : 1;
 	}
 }
 
@@ -232,10 +241,10 @@ class P_Cloud extends Particle{
 		this.width = this.image.width * this.scale;
 		this.height = this.image.height * this.scale;
 		this.position = new Vector(Math.random() * window.innerWidth,random_normal_distribution()*window.innerHeight - window.innerHeight * 0.5);
-		this.velocity = new Vector(-Math.random() - 1,Math.random() * 0.2 - 0.1);
+		this.velocity = new Vector((Math.random() + 1) * this.get_direction(),Math.random() * 0.2 - 0.1);
 		this.rotation = 360 * Math.random();
-		this.rotation_velocity = 0.1 * Math.random() - 0.05;
-		this.opacity = Math.random()*0.3 + 0.7;
+		this.rotation_velocity = 0.2 * Math.random() - 0.1;
+		this.opacity = 1;
 		
 		this.colour_base = 180;
 		this.colour_variation = (20 * this.id) % 100;
@@ -248,10 +257,16 @@ class P_Cloud extends Particle{
 		this.rotation = (this.rotation + this.rotation_velocity) % 360;
 		this.position.add(this.velocity);
 		
-		if(this.position.x < 0 - this.colour_canvas.width){
+		if(this.position.x < 0 - this.colour_canvas.width && this.velocity.x < 0){
 			this.init();
 			this.position.set(window.innerWidth + this.width,random_normal_distribution()*window.innerHeight - window.innerHeight * 0.5);
 			this.velocity.set(-Math.random() - 1,Math.random() * 0.2 - 0.1);
+		}
+		
+		if(this.position.x > window.innerWidth + this.colour_canvas.width && this.velocity.x > 0){
+			this.init();
+			this.position.set(-this.colour_canvas.width,random_normal_distribution()*window.innerHeight - window.innerHeight * 0.5);
+			this.velocity.set(Math.random()+ 1,Math.random() * 0.2 - 0.1);
 		}
 	}
 	
@@ -288,12 +303,6 @@ class P_Cloud extends Particle{
 		//Reset the opacity
 		ctx.globalAlpha = 1;
 	}
-	
-	set_image(image){
-		this.image = image;
-	}
-		
-	
 }
 
 class P_Dot extends Particle{
@@ -306,6 +315,7 @@ class P_Dot extends Particle{
 		this.current_life;
 		this.position;
 		this.life_value; // % of life left
+		this.image;
 	}
 	
 	init(){
@@ -344,13 +354,14 @@ class P_Dot extends Particle{
 	
 	draw(ctx){
 		
-		//Draw circle
-		var c = (255 * this.life_value)|0;
-		ctx.fillStyle="rgba("+c+","+c+","+c+",1)";
-		ctx.beginPath();
-		ctx.arc(this.position.x|0,this.position.y|0,this.radius * this.life_value,0,2*Math.PI);
-		ctx.fill();
-		
+		if("undefined" == typeof this.image){
+			//Draw circle
+			var c = (255 * this.life_value)|0;
+			ctx.fillStyle="rgba("+c+","+c+","+c+",1)";
+			ctx.beginPath();
+			ctx.arc(this.position.x|0,this.position.y|0,this.radius * this.life_value,0,2*Math.PI);
+			ctx.fill();
+		}
 	}
 }
 
@@ -381,11 +392,12 @@ class P_Circuit_Trail extends Particle{
 
 		//Vertex array for drawing the particle trail
 		this.vertices;
+		this.image;
 	}
 	
 	init(){
 		//Physical attributes
-		this.radius = Math.ceil(Math.min(this.id,8) * random_normal_distribution()) + 1;
+		this.radius = Math.ceil(this.id % 4 * random_normal_distribution()) + 3;
 		this.speed = this.radius / 18;
 		this.length = 600 + (Math.random() * 150 * this.radius)|0;
 		this.trail_width = Math.ceil(this.radius / 3);
@@ -455,7 +467,7 @@ class P_Circuit_Trail extends Particle{
 		//Prepare the gradient to make the trail fade out
 		var my_gradient=ctx.createLinearGradient(this.position.x - this.length * this.direction.x,0,this.position.x,0);
 		my_gradient.addColorStop(0,"rgba(255,255,255,0)");
-		my_gradient.addColorStop(1,"rgba(255,255,255," + this.radius * this.magic_opacity_constant + ")");
+		my_gradient.addColorStop(1,"rgba(255,255,255,1)");
 		ctx.strokeStyle = my_gradient;
 
 		//Draw trail
@@ -467,13 +479,17 @@ class P_Circuit_Trail extends Particle{
 		ctx.lineTo(this.position.x,this.position.y);
 		ctx.stroke();
 		
-		
-		//Draw circle
-		var c =((255 * this.radius * this.magic_opacity_constant)|0);
-		ctx.fillStyle="rgba("+ c +","+ c +","+ c +",1)";
-		ctx.beginPath();
-		ctx.arc(this.position.x|0,this.position.y|0,this.radius,0,2*Math.PI);
-		ctx.fill();
+		if("undefined" == typeof this.image){
+			//Draw circle
+			var c =((255 * this.radius * this.magic_opacity_constant)|0);
+			var c = 255;
+			ctx.fillStyle="rgba("+ c +","+ c +","+ c +",1)";
+			ctx.beginPath();
+			ctx.arc(this.position.x|0,this.position.y|0,this.radius,0,2*Math.PI);
+			ctx.fill();
+		}else{
+			
+		}
 	}
 	
 	//Shifts vertices to remove the oldest element
@@ -517,13 +533,6 @@ class P_Circuit_Trail extends Particle{
 	get_new_dctm(){
 		return (random_normal_distribution() * 900)|0;
 	}
-	
-	//Returns -1 or 1
-	get_direction(){
-		return ((Math.random() * 2)|0) == 0 ? -1 : 1;
-	}
-	
-	
 }
 
 class Vector{
