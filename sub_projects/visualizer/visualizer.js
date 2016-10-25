@@ -9,22 +9,25 @@ class Visualizer{
 		this.canvas_buffer = document.createElement('canvas');
 		this.ctx_buffer = this.canvas_buffer.getContext("2d");
 		
-		this.canvas_mask = document.createElement('canvas');
-		this.ctx_mask = this.canvas_mask.getContext("2d");
+		this.canvas_trail = document.createElement('canvas');
+		this.ctx_trail = this.canvas_trail.getContext("2d");
+		
+		this.canvas_dots = document.createElement('canvas');
+		this.ctx_dots = this.canvas_dots.getContext("2d");
+		
+		this.canvas_clouds = document.createElement('canvas');
+		this.ctx_clouds = this.canvas_clouds.getContext("2d");
 		
 		this.image_library = new ImageLibrary();
 		this.image_library.new_image("Cloud","images/cloud.png");
 		this.image_library.onload(function(){self.start();});
 		
 		this.canvas.id = "canvas_visualizer";
-		this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = this.width;
-		this.canvas.height = this.canvas_buffer.height = this.canvas_mask.height = this.height;
-		this.canvas.style.webkitFilter = "blur(1px)";
+		this.canvas.width = this.canvas_buffer.width = this.canvas_trail.width = this.canvas_dots.width = this.canvas_clouds.width = this.width;
+		this.canvas.height = this.canvas_buffer.height = this.canvas_trail.height = this.canvas_dots.height = this.canvas_clouds.height = this.height;
+		//this.canvas.style.webkitFilter = "blur(3px)";
 		this.canvas.style.backgroundColor = "#000";
-		
-		this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-		this.ctx_buffer.fillRect(0,0,this.canvas_buffer.width,this.canvas_buffer.height);
-		this.ctx_mask.fillRect(0,0,this.canvas_mask.width,this.canvas_mask.height);
+
 		document.body.appendChild(this.canvas);
 		
 		this.system_dot = new ParticleSystem(P_Dot,64);
@@ -47,12 +50,12 @@ class Visualizer{
 	update(){
 		this.render_frame = true;
 		if(window.innerWidth != this.width){
-			this.canvas.width = this.canvas_buffer.width = this.canvas_mask.width = window.innerWidth;
+			this.canvas.width = this.canvas_buffer.width = this.canvas_trail.width = this.canvas_dots.width =  this.canvas_clouds.width = window.innerWidth;
 			this.width = window.innerWidth;
 		}
 		
 		if(window.innerHeight != this.height){
-			this.canvas.height = this.canvas_buffer.height = this.canvas_mask.height = window.innerHeight;
+			this.canvas.height = this.canvas_buffer.height = this.canvas_trail.height = this.canvas_dots.height =  this.canvas_clouds.height = window.innerHeight;
 			this.height = window.innerHeight;
 		}
 		
@@ -66,31 +69,78 @@ class Visualizer{
 	draw(){
 		
 		//Reset Buffer
-		this.ctx_buffer.fillStyle="#08f";
-		this.ctx_buffer.fillRect(0,0,screen.width * 2,screen.height * 2);
+		this.ctx_buffer.fillStyle="#000";
+		this.ctx_buffer.fillRect(0,0,screen.width,screen.height);
 		
-		//Reset Mask
-		this.ctx_mask.fillStyle="#000";
-		this.ctx_mask.fillRect(0,0,screen.width * 2,screen.height * 2);
+		//Reset trail canvas
+		this.ctx_trail.fillStyle="#000";
+		this.ctx_trail.fillRect(0,0,screen.width,screen.height);
+		
+		//Reset dots canvas
+		this.ctx_dots.fillStyle="#000";
+		this.ctx_dots.fillRect(0,0,screen.width,screen.height);
+		
+		//Reset cloud canvas
+		this.ctx_clouds.fillStyle="#06b";
+		this.ctx_clouds.fillRect(0,0,screen.width,screen.height);
 		
 		//Draw systems
-		this.system_dot.draw(this.ctx_mask);
-		this.system_trail.draw(this.ctx_mask);
-		//this.system_cloud.draw(this.ctx_buffer);
-		Filter.faded_border(this.canvas_mask, 150);
+		this.system_dot.draw(this.ctx_dots);
+		this.system_trail.draw(this.ctx_trail);
+		this.system_cloud.draw(this.ctx_clouds);		
 		
+		//Draw clouds to buffer
+		this.ctx_buffer.save();
+		this.ctx_buffer.translate(this.canvas_buffer.width,0);
+		this.ctx_buffer.scale(-1,1);
 		
-		//Draw mask over buffer
-		this.ctx_buffer.globalCompositeOperation="multiply";
-		this.ctx_buffer.drawImage(this.canvas_mask,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_buffer.globalAlpha = 0.3;
+		this.ctx_buffer.drawImage(this.canvas_clouds,0,0,this.canvas_buffer.width,this.canvas_buffer.height);
+		this.ctx_buffer.globalAlpha = 1;
+		
+		this.ctx_buffer.scale(-1,1);
+		this.ctx_buffer.restore();
+		
+		//Draw clouds over trails
+		this.ctx_trail.globalCompositeOperation="multiply";
+		this.ctx_trail.drawImage(this.canvas_clouds,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_trail.globalCompositeOperation="source-over";
+		
+		this.ctx_trail.globalCompositeOperation="hard-light";
+		this.ctx_trail.drawImage(this.canvas_trail,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_trail.globalCompositeOperation="source-over";
+		
+		//Change hue of clouds
+		this.ctx_clouds.globalCompositeOperation="hue";
+		this.ctx_clouds.fillStyle="#0f8";
+		this.ctx_clouds.fillRect(0,0,screen.width,screen.height);
+		this.ctx_clouds.globalCompositeOperation="source-over";
+		
+		//Draw clouds over dots
+		this.ctx_dots.globalCompositeOperation="multiply";
+		this.ctx_dots.drawImage(this.canvas_clouds,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_dots.globalCompositeOperation="source-over";
+
+		//Draw dots to buffer
+		this.ctx_buffer.globalCompositeOperation="screen";
+		this.ctx_buffer.drawImage(this.canvas_trail,0,0,this.canvas.width,this.canvas.height);
 		this.ctx_buffer.globalCompositeOperation="source-over";
 		
+		//Draw trails to buffer
+		this.ctx_buffer.globalCompositeOperation="screen";
+		this.ctx_buffer.drawImage(this.canvas_dots,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_buffer.globalCompositeOperation="source-over";
 		
+		//Amplify colours
+		this.ctx_buffer.globalCompositeOperation="overlay";
+		this.ctx_buffer.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
+		this.ctx_buffer.globalCompositeOperation="source-over";
 		
-
-		//Draw to main canvas
+		//Draw border on buffer
+		Filter.faded_border(this.canvas_buffer, 150);
+		
+		//Draw buffer to canvas
 		this.ctx.drawImage(this.canvas_buffer,0,0,this.canvas.width,this.canvas.height);
-		
 	}
 }
 
@@ -178,18 +228,18 @@ class P_Cloud extends Particle{
 	}
 	
 	init(){
-		this.scale = Math.random() * 0.7 + 0.1;
+		this.scale = Math.random() * 0.4 + 0.1;
 		this.width = this.image.width * this.scale;
 		this.height = this.image.height * this.scale;
-		this.position = new Vector(window.innerWidth,random_normal_distribution()*window.innerHeight);
-		this.velocity = new Vector(-Math.random() * 2 - 0.1,Math.random() * 0.2 - 0.1);
+		this.position = new Vector(Math.random() * window.innerWidth,random_normal_distribution()*window.innerHeight - window.innerHeight * 0.5);
+		this.velocity = new Vector(-Math.random() - 1,Math.random() * 0.2 - 0.1);
 		this.rotation = 360 * Math.random();
 		this.rotation_velocity = 0.1 * Math.random() - 0.05;
-		this.opacity = Math.random()*0.5 + 0.5;
+		this.opacity = Math.random()*0.3 + 0.7;
 		
-		this.colour_base = 170;
-		this.colour_variation = 60;
-		this.colour = "hsl("+ (this.colour_base + ((this.colour_variation * Math.random())|0)) +", 100%, 50%)";
+		this.colour_base = 180;
+		this.colour_variation = (20 * this.id) % 100;
+		this.colour = "hsl("+ (this.colour_base + ((this.colour_variation * Math.random())|0)) +"," + (Math.random() * 50 + 50) + "%, 50%)";
 		this.colour_canvas.width = this.colour_canvas.height = this.width > this.height ? (this.width * 1.415)|0 : (this.height * 1.415)|0;
 		
 	}
@@ -198,8 +248,11 @@ class P_Cloud extends Particle{
 		this.rotation = (this.rotation + this.rotation_velocity) % 360;
 		this.position.add(this.velocity);
 		
-		if(this.position.x < 0 - this.colour_canvas.width)
+		if(this.position.x < 0 - this.colour_canvas.width){
 			this.init();
+			this.position.set(window.innerWidth + this.width,random_normal_distribution()*window.innerHeight - window.innerHeight * 0.5);
+			this.velocity.set(-Math.random() - 1,Math.random() * 0.2 - 0.1);
+		}
 	}
 	
 	draw(ctx){
@@ -230,7 +283,7 @@ class P_Cloud extends Particle{
 		ctx.globalAlpha = this.opacity;
 		
 		//Draw to main canvas
-		ctx.drawImage(this.colour_canvas,this.position.x - this.colour_canvas.width * 0.5,this.position.y - this.colour_canvas.height * 0.5,this.colour_canvas.width,this.colour_canvas.height);
+		ctx.drawImage(this.colour_canvas,this.position.x - this.colour_canvas.width * 0.5,this.position.y - this.colour_canvas.height * 0.5,this.colour_canvas.width * 2,this.colour_canvas.height * 2);
 		
 		//Reset the opacity
 		ctx.globalAlpha = 1;
@@ -247,6 +300,7 @@ class P_Dot extends Particle{
 	constructor(id){
 		super(id,id);
 		this.id = id;
+		this.max_radius;
 		this.radius;
 		this.lifespan;
 		this.current_life;
@@ -257,12 +311,13 @@ class P_Dot extends Particle{
 	init(){
 		//Physical
 		this.position = new Vector(((random_normal_distribution() * window.innerWidth)|0), ((random_normal_distribution() * window.innerHeight)|0));
-		this.radius = random_normal_distribution() * Math.min(this.id, 24) * 0.5 + 2;
+		this.max_radius = random_normal_distribution() * Math.min(this.id, 8) * 0.5 + 1;
 		
 		//Emotional
-		this.current_life = random_normal_distribution() * 400;
-		this.lifespan = random_normal_distribution() * 800;
+		this.current_life = 0;
+		this.lifespan = random_normal_distribution() * 400;
 		this.life_value = 1 - this.current_life / this.lifespan;
+		this.spawn_time = Math.ceil(Math.random() * 8) + 1;
 	}
 	
 	update(){
@@ -271,6 +326,13 @@ class P_Dot extends Particle{
 		if(this.lifespan <= ++this.current_life){
 			//Un-dead it
 			this.init();
+		}
+		
+		//Doesn't just spawn into existance, it grows!
+		if(this.current_life < this.spawn_time){
+			this.radius = this.max_radius * this.current_life / this.spawn_time; 
+		}else{
+			this.radius = this.max_radius;
 		}
 		
 		//Set the life value
@@ -303,27 +365,38 @@ class P_Circuit_Trail extends Particle{
 		this.magic_opacity_constant = 0.07142;
 		
 		//Physical attributes
-		this.radius = Math.ceil(Math.min(id,12) * random_normal_distribution()) + 1;
-		this.speed = this.radius / 18;
-		this.length = 600 + (Math.random() * 150 * this.radius)|0;
-		this.trail_width = Math.ceil(this.radius / 3);
+		this.radius;
+		this.speed;
+		this.length;
+		this.trail_width;
 		
 		//Position Attributes
-		this.direction = new Vector(id%2 == 1 ? -1 : 1,((Math.random() * 3)|0) - 1); //x = -1 (Left) x = 1 (Right), y = -1 (Up) y = 0 (Straight) y = 1 (Down) 
+		this.direction = new Vector(this.id%2 == 1 ? -1 : 1,((Math.random() * 3)|0) - 1);;
 		this.position = new Vector((Math.random() * window.innerWidth)|0,(random_normal_distribution() * window.innerHeight)|0);
 		this.velocity = new Vector(this.speed * this.direction.x,0);
 
 		//Direction change timer variables
-		this.dct = 0;
+		this.dct;
 		this.dctm;
 
 		//Vertex array for drawing the particle trail
-		this.vertices = [];
-		
-		this.change_direction();
+		this.vertices;
 	}
 	
 	init(){
+		//Physical attributes
+		this.radius = Math.ceil(Math.min(this.id,8) * random_normal_distribution()) + 1;
+		this.speed = this.radius / 18;
+		this.length = 600 + (Math.random() * 150 * this.radius)|0;
+		this.trail_width = Math.ceil(this.radius / 3);
+
+		this.dct = 0;
+		
+		//Vertex array for drawing the particle trail
+		this.vertices = [];
+		
+		//Set new vertex
+		this.change_direction();
 		
 	}
 	
@@ -360,17 +433,15 @@ class P_Circuit_Trail extends Particle{
 		//Off the right side
 		if(this.vertices[0].x > screen.width && 1 == this.direction.x){
 			this.position = new Vector((Math.random() * -100)|0,(random_normal_distribution() * window.innerHeight)|0);
-			this.vertices = [];
-			this.vertices[0] = new Vector(this.position.x - this.length, this.position.y);
 			this.direction.y = 0;
+			this.init();
 		}
 		
 		//Off the left side
 		if(this.vertices[0].x < 0 && -1 == this.direction.x){
 			this.position = new Vector((Math.random() * 100)|0 + window.innerWidth,(random_normal_distribution() * window.innerHeight)|0);
-			this.vertices = [];
-			this.vertices[0] = new Vector(this.position.x + this.length, this.position.y);
 			this.direction.y = 0;
+			this.init();
 		}
 	}
 	
