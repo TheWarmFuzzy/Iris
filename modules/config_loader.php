@@ -1,17 +1,16 @@
 <?php namespace config_loader;
+	
+	/* config_loader.php
+	A module to load in json config files for each module
 
+	Revision history:
+		Jeffrey Nelson 2016.10.18 Created
+	*/
+	
 	function load($filename){
-		
-		//Check if the input exists
-		if(!isset($filename))
-			return null;
 
 		//Check if the input is valid
-		if(!is_string($filename))
-			return null;
-		
-		//Check if the filename is empty
-		if(empty($filename))
+		if(!\lib_validation\validate($filename, LV_STRING))
 			return null;
 		
 		//Escape characters just to be safe 

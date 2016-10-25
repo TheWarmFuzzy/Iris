@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300');
+
+body{
+    
+    margin:0px;
+}
+form{
+    background-color:rgba(0, 0, 0, 0.5);
+    padding:25px 50px;
+    width:300px;
+    margin:0px auto;
+    
+}
+.input{
+    width:290px;
+    height:30px;
+    border-radius:4px;
+    border:none;
+}
+.input.text{
+     margin:2px 0px;
+    background: url() no-repeat scroll 7px 7px;
+    background-color:#FFF;
+    padding-left:30px;
+    width:260px;
+}
+.input.button{
+    margin-top: 15px;
+}
+
+.label, .button{
+    font-family: 'Open Sans', sans-serif;
+}
+.label{
+    margin-bottom:12px;
+    color:#fff;
+}
