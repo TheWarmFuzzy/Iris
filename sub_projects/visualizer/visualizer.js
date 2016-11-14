@@ -25,7 +25,7 @@ class Visualizer{
 		this.canvas.id = "canvas_visualizer";
 		this.canvas.width = this.canvas_buffer.width = this.canvas_trail.width = this.canvas_dots.width = this.canvas_clouds.width = this.width;
 		this.canvas.height = this.canvas_buffer.height = this.canvas_trail.height = this.canvas_dots.height = this.canvas_clouds.height = this.height;
-		//this.canvas.style.webkitFilter = "blur(3px)";
+		this.canvas.style.webkitFilter = "blur(0px)";
 		this.canvas.style.backgroundColor = "#000";
 
 		document.body.appendChild(this.canvas);
